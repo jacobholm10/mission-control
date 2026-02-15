@@ -1,0 +1,10 @@
+[
+  { "id": "TSK-001", "title": "Catalog V2 - scrape missing 13 products", "progress": 40, "status": "in-progress", "agent": "Claude", "column": "in-progress" },
+  { "id": "TSK-002", "title": "Build auto-responder for FB Marketplace", "progress": 0, "status": "backlog", "agent": "Sonnet", "column": "backlog" },
+  { "id": "TSK-003", "title": "Set up marketplace bot cron", "progress": 0, "status": "backlog", "agent": "Claude", "column": "backlog" },
+  { "id": "TSK-004", "title": "Wire up comment monitoring", "progress": 0, "status": "backlog", "agent": "Opus", "column": "backlog" },
+  { "id": "TSK-005", "title": "Cooper Hunter catalog data cleanup", "progress": 100, "status": "done", "agent": "Claude", "column": "done" },
+  { "id": "TSK-006", "title": "Mission Control dashboard - frontend", "progress": 90, "status": "in-progress", "agent": "Claude", "column": "in-progress" },
+  { "id": "TSK-007", "title": "Deploy Mission Control to Vercel", "progress": 0, "status": "backlog", "agent": "Haiku", "column": "backlog" },
+  { "id": "TSK-008", "title": "Build product comparison tool", "progress": 20, "status": "in-progress", "agent": "Opus", "column": "in-progress" }
+]
