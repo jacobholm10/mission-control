@@ -3,18 +3,10 @@ import TopBar from './components/TopBar';
 import Dashboard from './components/Dashboard';
 import FileExplorer from './components/FileExplorer';
 import ThoughtStream from './components/ThoughtStream';
+import ActiveAgents from './components/ActiveAgents';
+import MemoryGraph from './components/MemoryGraph';
+import SettingsPanel from './components/SettingsPanel';
 import { useAgentState } from './hooks/useAgentState';
-
-function PlaceholderTab({ title }) {
-  return (
-    <div className="flex-1 flex items-center justify-center text-slate-600 text-sm">
-      <div className="text-center">
-        <div className="text-2xl mb-2">🚧</div>
-        <div>{title} — Coming Soon</div>
-      </div>
-    </div>
-  );
-}
 
 export default function App() {
   const state = useAgentState();
@@ -24,13 +16,13 @@ export default function App() {
       case 'dashboard':
         return <Dashboard tasks={state.tasks} approvals={state.approvals} approveAction={state.approveAction} rejectAction={state.rejectAction} telemetry={state.telemetry} latencyData={state.latencyData} />;
       case 'workspace':
-        return <FileExplorer fileSystem={state.fileSystem} selectedFile={state.selectedFile} setSelectedFile={state.setSelectedFile} />;
+        return <FileExplorer selectedFile={state.selectedFile} setSelectedFile={state.setSelectedFile} />;
       case 'agents':
-        return <PlaceholderTab title="Active Agents" />;
+        return <ActiveAgents />;
       case 'memory':
-        return <PlaceholderTab title="Memory Graph" />;
+        return <MemoryGraph />;
       case 'settings':
-        return <PlaceholderTab title="Settings" />;
+        return <SettingsPanel />;
       default:
         return <Dashboard tasks={state.tasks} approvals={state.approvals} approveAction={state.approveAction} rejectAction={state.rejectAction} telemetry={state.telemetry} latencyData={state.latencyData} />;
     }

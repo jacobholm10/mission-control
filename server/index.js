@@ -144,6 +144,91 @@ app.delete('/api/tasks/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// ─── API: Agents ───
+
+app.get('/api/agents', (req, res) => {
+  try {
+    const files = fs.readdirSync(SESSIONS_DIR)
+      .filter(f => f.endsWith('.jsonl') && !f.includes('deleted'))
+      .map(f => {
+        const fullPath = path.join(SESSIONS_DIR, f);
+        const stat = fs.statSync(fullPath);
+        let model = 'unknown', inputTokens = 0, outputTokens = 0, firstTs = null, lastTs = null;
+        try {
+          const content = fs.readFileSync(fullPath, 'utf8');
+          const lines = content.split('\n').filter(Boolean);
+          for (let i = 0; i < Math.min(lines.length, 20); i++) {
+            try {
+              const obj = JSON.parse(lines[i]);
+              if (obj.model) model = obj.model;
+              if (obj.message?.model) model = obj.message.model;
+              if (obj.timestamp && !firstTs) firstTs = obj.timestamp;
+            } catch {}
+          }
+          // Get last timestamp
+          for (let i = lines.length - 1; i >= Math.max(0, lines.length - 5); i--) {
+            try {
+              const obj = JSON.parse(lines[i]);
+              if (obj.timestamp) { lastTs = obj.timestamp; break; }
+            } catch {}
+          }
+          // Count tokens
+          for (const line of lines) {
+            try {
+              const obj = JSON.parse(line);
+              if (obj.usage) { inputTokens += obj.usage.input_tokens || 0; outputTokens += obj.usage.output_tokens || 0; }
+              if (obj.message?.usage) { inputTokens += obj.message.usage.input_tokens || 0; outputTokens += obj.message.usage.output_tokens || 0; }
+            } catch {}
+          }
+        } catch {}
+        const fiveMin = 5 * 60 * 1000;
+        const isActive = (Date.now() - stat.mtimeMs) < fiveMin;
+        return {
+          id: f.replace('.jsonl', ''),
+          filename: f,
+          size: stat.size,
+          modified: stat.mtime.toISOString(),
+          model,
+          inputTokens,
+          outputTokens,
+          status: isActive ? 'active' : 'completed',
+          firstTimestamp: firstTs,
+          lastTimestamp: lastTs,
+        };
+      })
+      .sort((a, b) => new Date(b.modified) - new Date(a.modified));
+    res.json(files);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── API: Memory ───
+
+app.get('/api/memory', (req, res) => {
+  const WORKSPACE = '/home/openclaw/.openclaw/workspace';
+  const MEMORY_DIR = path.join(WORKSPACE, 'memory');
+  const result = { memoryMd: null, dailyFiles: [] };
+  try {
+    const mdPath = path.join(WORKSPACE, 'MEMORY.md');
+    if (fs.existsSync(mdPath)) result.memoryMd = fs.readFileSync(mdPath, 'utf8');
+  } catch {}
+  try {
+    const files = fs.readdirSync(MEMORY_DIR)
+      .filter(f => f.endsWith('.md'))
+      .sort((a, b) => b.localeCompare(a));
+    for (const f of files.slice(0, 30)) {
+      try {
+        const fullPath = path.join(MEMORY_DIR, f);
+        const stat = fs.statSync(fullPath);
+        const content = fs.readFileSync(fullPath, 'utf8');
+        result.dailyFiles.push({ name: f, date: f.replace('.md', ''), size: stat.size, content });
+      } catch {}
+    }
+  } catch {}
+  res.json(result);
+});
+
 // ─── WebSocket: Logs ───
 
 const wssLogs = new WebSocket.Server({ noServer: true });

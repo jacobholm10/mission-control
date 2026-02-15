@@ -3,13 +3,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 const API_URL = import.meta.env.VITE_API_URL || 'http://134.199.194.19:3001';
 const WS_URL = API_URL.replace(/^http/, 'ws');
 
-// Mock fallbacks
-const mockFileSystem = {
-  name: 'fb-mvp', type: 'folder', children: [
-    { name: 'Loading...', type: 'file', status: null },
-  ]
-};
-
 const mockTasks = [
   { id: 'TSK-001', title: 'Set up Vite + React project', progress: 100, status: 'done', agent: 'Claude' },
   { id: 'TSK-002', title: 'Build Sidebar navigation', progress: 85, status: 'in-progress', agent: 'Claude' },
@@ -20,20 +13,9 @@ const mockApprovals = [
   { id: 'APR-001', action: 'git_push', description: 'Push 3 commits to main branch', risk: 'medium', timestamp: Date.now() - 120000 },
 ];
 
-function apiToFileTree(items, rootName = 'fb-mvp') {
-  return {
-    name: rootName, type: 'folder',
-    children: items.map(i => ({
-      name: i.name, type: i.type, status: i.status,
-      language: i.name.split('.').pop(),
-    })),
-  };
-}
-
 export function useAgentState() {
   const [systemStatus, setSystemStatus] = useState('RUNNING');
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [fileSystem, setFileSystem] = useState(mockFileSystem);
   const [selectedFile, setSelectedFile] = useState(null);
   const [tasks, setTasks] = useState(mockTasks);
   const [approvals, setApprovals] = useState(mockApprovals);
@@ -64,13 +46,6 @@ export function useAgentState() {
     return () => clearInterval(id);
   }, []);
 
-  // Fetch files
-  useEffect(() => {
-    fetch(`${API_URL}/api/files`).then(r => r.json()).then(d => {
-      setFileSystem(apiToFileTree(d.items));
-    }).catch(() => {});
-  }, []);
-
   // Fetch tasks
   useEffect(() => {
     fetch(`${API_URL}/api/tasks`).then(r => r.json()).then(d => {
@@ -97,18 +72,12 @@ export function useAgentState() {
     return () => { clearTimeout(reconnect); ws?.close(); };
   }, []);
 
-  // WebSocket: file changes
+  // WebSocket: file changes (kept for potential future use)
   useEffect(() => {
     let ws, reconnect;
     const connect = () => {
       try {
         ws = new WebSocket(`${WS_URL}/ws/files`);
-        ws.onmessage = () => {
-          // Refresh file list on any change
-          fetch(`${API_URL}/api/files`).then(r => r.json()).then(d => {
-            setFileSystem(apiToFileTree(d.items));
-          }).catch(() => {});
-        };
         ws.onclose = () => { reconnect = setTimeout(connect, 5000); };
       } catch {}
     };
@@ -157,7 +126,7 @@ export function useAgentState() {
   return {
     systemStatus, setSystemStatus,
     activeTab, setActiveTab,
-    fileSystem, selectedFile, setSelectedFile,
+    selectedFile, setSelectedFile,
     tasks, setTasks,
     approvals, approveAction, rejectAction,
     logs, latencyData, telemetry,
